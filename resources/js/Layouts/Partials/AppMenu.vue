@@ -207,7 +207,7 @@ const model = ref([
             {
                 label: "Settings",
                 icon: "pi pi-cog",
-                to: route("settings.general"),
+                to: route("settings.index"),
             },
         ],
     },
