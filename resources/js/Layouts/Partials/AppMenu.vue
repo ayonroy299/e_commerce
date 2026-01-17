@@ -89,6 +89,27 @@ const model = ref([
         ],
     },
     {
+        label: "Accounting Lite",
+        icon: "pi pi-chart-line",
+        items: [
+            {
+                label: "Financial Overview",
+                icon: "pi pi-info-circle",
+                to: route("accounting.overview"),
+            },
+            {
+                label: "Chart of Accounts",
+                icon: "pi pi-list",
+                to: route("accounts.index"),
+            },
+            {
+                label: "General Journal",
+                icon: "pi pi-book",
+                to: route("journals.index"),
+            },
+        ],
+    },
+    {
         label: "User Management",
         icon: "pi pi-users",
         items: [
@@ -154,6 +175,11 @@ const model = ref([
                         label: "Customers",
                         icon: "pi pi-users",
                         to: route("customers.index"),
+                    },
+                    {
+                        label: "Stock Transfers",
+                        icon: "pi pi-sync",
+                        to: route("stock-transfers.index"),
                     },
                 ],
             },

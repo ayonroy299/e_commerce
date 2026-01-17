@@ -139,6 +139,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\BranchContextMiddlew
     Route::resource('adjustments', App\Http\Controllers\Admin\StockAdjustmentController::class);
     Route::post('adjustments/{adjustment}/approve', [App\Http\Controllers\Admin\StockAdjustmentController::class, 'approve'])
         ->name('adjustments.approve');
+    // Inventory & Stock Transfers
+    CrudRouter::setFor('stock-transfers', App\Http\Controllers\Admin\StockTransferController::class);
+    Route::post('stock-transfers/{transfer}/send', [App\Http\Controllers\Admin\StockTransferController::class, 'send'])->name('stock-transfers.send');
+    Route::post('stock-transfers/{transfer}/receive', [App\Http\Controllers\Admin\StockTransferController::class, 'receive'])->name('stock-transfers.receive');
+
     // EMI
     CrudRouter::setFor('emi-plans', App\Http\Controllers\Admin\EmiPlanController::class);
     Route::get('emi/contracts', [App\Http\Controllers\Admin\EmiContractController::class, 'index'])->name('emi-contracts.index');
@@ -150,6 +155,12 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\BranchContextMiddlew
     CrudRouter::setFor('service-tickets', App\Http\Controllers\Admin\ServiceTicketController::class);
     Route::post('service-tickets/{ticket}/status', [App\Http\Controllers\Admin\ServiceTicketController::class, 'updateStatus'])->name('service-tickets.update-status');
     Route::post('service-tickets/{ticket}/actions', [App\Http\Controllers\Admin\ServiceActionController::class, 'store'])->name('service-actions.store');
+
+    // Accounting Lite
+    Route::get('accounting/overview', [App\Http\Controllers\Admin\JournalController::class, 'overview'])->name('accounting.overview');
+    CrudRouter::setFor('accounts', App\Http\Controllers\Admin\AccountController::class);
+    Route::get('journals', [App\Http\Controllers\Admin\JournalController::class, 'index'])->name('journals.index');
+    Route::get('accounts/{account}/ledger', [App\Http\Controllers\Admin\JournalController::class, 'ledger'])->name('accounts.ledger');
 
     // Purchasing
     Route::post('purchase-orders/{order}/approve', [App\Http\Controllers\Admin\PurchaseOrderController::class, 'approve'])
