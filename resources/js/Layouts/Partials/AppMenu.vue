@@ -62,6 +62,33 @@ const model = ref([
         ],
     },
     {
+        label: "Installments (EMI)",
+        icon: "pi pi-calendar-plus",
+        items: [
+            {
+                label: "EMI Plans",
+                icon: "pi pi-list",
+                to: route("emi-plans.index"),
+            },
+            {
+                label: "EMI Contracts",
+                icon: "pi pi-file",
+                to: route("emi-contracts.index"),
+            },
+        ],
+    },
+    {
+        label: "Service & Warranty",
+        icon: "pi pi-wrench",
+        items: [
+            {
+                label: "Service Tickets",
+                icon: "pi pi-ticket",
+                to: route("service-tickets.index"),
+            },
+        ],
+    },
+    {
         label: "User Management",
         icon: "pi pi-users",
         items: [

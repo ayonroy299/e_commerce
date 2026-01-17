@@ -11,6 +11,8 @@ import InputNumber from 'primevue/inputnumber';
 import axios from 'axios';
 import { useToast } from "primevue/usetoast";
 
+const props = defineProps(['session', 'emi_plans', 'customers']);
+
 const toast = useToast();
 
 const cart = ref([]);
@@ -24,10 +26,16 @@ const productSuggestions = ref([]);
 const showPaymentModal = ref(false);
 const paidAmount = ref(0);
 const paymentMethod = ref('cash');
+const selectedEmiPlan = ref(null);
 
 const subtotal = computed(() => cart.value.reduce((acc, item) => acc + (item.quantity * item.price), 0));
 const total = computed(() => subtotal.value); // Add tax logic later
 const change = computed(() => Math.max(0, paidAmount.value - total.value));
+
+const minDownPayment = computed(() => {
+    if (paymentMethod.value !== 'emi' || !selectedEmiPlan.value) return 0;
+    return (total.value * selectedEmiPlan.value.down_payment_percentage / 100);
+});
 
 const searchProducts = async (event) => {
     if (!event.query.trim()) return;
@@ -73,6 +81,11 @@ const searchCustomers = async (event) => {
 };
 
 const processPayment = async () => {
+    if (paymentMethod.value === 'emi' && !customer.value) {
+        toast.add({ severity: 'warn', summary: 'Customer Required', detail: 'EMI requires a selected customer', life: 3000 });
+        return;
+    }
+
     try {
         const response = await axios.post(route('pos.store'), {
             customer_id: customer.value?.id,
@@ -84,6 +97,7 @@ const processPayment = async () => {
             })),
             payment_method: paymentMethod.value,
             paid_amount: paidAmount.value,
+            emi_plan_id: selectedEmiPlan.value?.id,
         });
 
         if (response.data.success) {
@@ -92,9 +106,12 @@ const processPayment = async () => {
             customer.value = null;
             showPaymentModal.value = false;
             paidAmount.value = 0;
+            selectedEmiPlan.value = null;
+            paymentMethod.value = 'cash';
         }
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction failed', life: 3000 });
+        const message = e.response?.data?.message || 'Transaction failed';
+        toast.add({ severity: 'error', summary: 'Error', detail: message, life: 3000 });
         console.error(e);
     }
 };
@@ -102,6 +119,8 @@ const processPayment = async () => {
 const openPayment = () => {
     if (!cart.value.length) return;
     paidAmount.value = total.value;
+    paymentMethod.value = 'cash';
+    selectedEmiPlan.value = null;
     showPaymentModal.value = true;
 };
 </script>
@@ -216,11 +235,40 @@ const openPayment = () => {
                 </div>
                 
                 <div class="flex gap-2 justify-center">
-                    <Button label="Cash" :class="{'p-button-outlined': paymentMethod !== 'cash'}" @click="paymentMethod = 'cash'" />
-                    <Button label="Card" :class="{'p-button-outlined': paymentMethod !== 'card'}" @click="paymentMethod = 'card'" />
+                    <Button label="Cash" :class="{'p-button-outlined': paymentMethod !== 'cash'}" @click="paymentMethod = 'cash'; paidAmount = total" />
+                    <Button label="Card" :class="{'p-button-outlined': paymentMethod !== 'card'}" @click="paymentMethod = 'card'; paidAmount = total" />
+                    <Button label="EMI" :class="{'p-button-outlined': paymentMethod !== 'emi'}" @click="paymentMethod = 'emi'; paidAmount = 0" />
+                </div>
+
+                <div v-if="paymentMethod === 'emi'" class="animate-fade-in space-y-3 p-3 bg-blue-50 rounded-lg">
+                    <div class="field">
+                        <label class="block mb-1 text-sm font-bold">Select EMI Plan</label>
+                        <Select 
+                            v-model="selectedEmiPlan" 
+                            :options="emi_plans" 
+                            optionLabel="name" 
+                            placeholder="Choose Plan" 
+                            class="w-full"
+                        />
+                    </div>
+                    <div v-if="selectedEmiPlan" class="text-sm">
+                        <div class="flex justify-between">
+                            <span>Min Down Payment:</span>
+                            <span class="font-bold">{{ minDownPayment.toFixed(2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Interest Rate:</span>
+                            <span>{{ selectedEmiPlan.interest_rate }}%</span>
+                        </div>
+                    </div>
                 </div>
                 
-                 <Button label="Complete Sale" class="w-full mt-4" @click="processPayment" :disabled="paidAmount < total" />
+                 <Button 
+                    label="Complete Sale" 
+                    class="w-full mt-4" 
+                    @click="processPayment" 
+                    :disabled="paymentMethod === 'emi' ? (!selectedEmiPlan || paidAmount < minDownPayment) : (paidAmount < total)" 
+                />
              </div>
         </Dialog>
     </div>

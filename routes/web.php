@@ -135,11 +135,22 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\BranchContextMiddlew
 
 
 
-
     // Stock Adjustments
     Route::resource('adjustments', App\Http\Controllers\Admin\StockAdjustmentController::class);
     Route::post('adjustments/{adjustment}/approve', [App\Http\Controllers\Admin\StockAdjustmentController::class, 'approve'])
         ->name('adjustments.approve');
+    // EMI
+    CrudRouter::setFor('emi-plans', App\Http\Controllers\Admin\EmiPlanController::class);
+    Route::get('emi/contracts', [App\Http\Controllers\Admin\EmiContractController::class, 'index'])->name('emi-contracts.index');
+    Route::get('emi/contracts/{contract}', [App\Http\Controllers\Admin\EmiContractController::class, 'show'])->name('emi-contracts.show');
+    Route::post('emi/contracts/{contract}/cancel', [App\Http\Controllers\Admin\EmiContractController::class, 'cancel'])->name('emi-contracts.cancel');
+    Route::post('emi/receipts', [App\Http\Controllers\Admin\EmiReceiptController::class, 'store'])->name('emi-receipts.store');
+
+    // Service & Warranty
+    CrudRouter::setFor('service-tickets', App\Http\Controllers\Admin\ServiceTicketController::class);
+    Route::post('service-tickets/{ticket}/status', [App\Http\Controllers\Admin\ServiceTicketController::class, 'updateStatus'])->name('service-tickets.update-status');
+    Route::post('service-tickets/{ticket}/actions', [App\Http\Controllers\Admin\ServiceActionController::class, 'store'])->name('service-actions.store');
+
     // Purchasing
     Route::post('purchase-orders/{order}/approve', [App\Http\Controllers\Admin\PurchaseOrderController::class, 'approve'])
         ->name('purchase-orders.approve');
