@@ -32,6 +32,7 @@ Route::get('/', WelcomePageController::class)->name('welcome');
 // AUTH & VERIFIED
 
 Route::middleware(['auth', 'verified', \App\Http\Middleware\BranchContextMiddleware::class])->prefix('admin')->group(function () {
+    Route::get('/dashboard', \App\Http\Controllers\Admin\DashboardController::class)->name('dashboard');
     CrudRouter::setFor('products', ProductController::class);
     Route::get('/admin/products/{product}/edit-data', [ProductController::class, 'editData'])
         ->name('products.edit-data');
@@ -198,4 +199,20 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\BranchContextMiddlew
     Route::post('settings', [App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
     Route::resource('taxes', App\Http\Controllers\Admin\TaxController::class)->only(['store', 'update', 'destroy']);
     Route::resource('currencies', App\Http\Controllers\Admin\CurrencyController::class)->only(['store', 'update', 'destroy']);
+
+    // Reports
+    Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/sales', [App\Http\Controllers\Admin\ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/stock', [App\Http\Controllers\Admin\ReportController::class, 'stock'])->name('reports.stock');
+    Route::get('reports/purchases', [App\Http\Controllers\Admin\ReportController::class, 'purchases'])->name('reports.purchases');
+
+    // Imports & Backups
+    Route::get('imports', [App\Http\Controllers\Admin\ImportController::class, 'index'])->name('imports.index');
+    Route::post('imports', [App\Http\Controllers\Admin\ImportController::class, 'store'])->name('imports.store');
+    Route::get('backups', [App\Http\Controllers\Admin\BackupController::class, 'index'])->name('backups.index');
+    Route::post('backups', [App\Http\Controllers\Admin\BackupController::class, 'store'])->name('backups.store');
+
+    // Notifications
+    Route::resource('notification-templates', App\Http\Controllers\Admin\NotificationTemplateController::class);
+    Route::get('notification-jobs', [App\Http\Controllers\Admin\NotificationJobController::class, 'index'])->name('notification-jobs.index');
 });

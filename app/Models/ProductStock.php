@@ -24,6 +24,17 @@ class ProductStock extends BaseModel
         'alert_quantity' => 'decimal:2',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saved(function ($model) {
+            if ($model->quantity <= $model->alert_quantity && $model->alert_quantity > 0) {
+                app(\App\Services\NotificationHookService::class)->triggerLowStockAlert($model);
+            }
+        });
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
