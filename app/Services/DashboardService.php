@@ -49,7 +49,9 @@ class DashboardService
 
     protected function getInventoryStats(?int $branchId)
     {
-        $lowStockQuery = Product::whereHas('stocks', function ($q) use ($branchId) {
+        $lowStockQuery = Product::with(['stocks' => function ($q) use ($branchId) {
+            if ($branchId) $q->where('branch_id', $branchId);
+        }])->whereHas('stocks', function ($q) use ($branchId) {
             $q->whereColumn('quantity', '<=', 'alert_quantity')
               ->whereNotNull('alert_quantity');
             if ($branchId) {
@@ -57,9 +59,20 @@ class DashboardService
             }
         });
 
+        $lowStockItems = $lowStockQuery->limit(5)->get()->map(function ($p) {
+            $stock = $p->stocks->first(); // Assuming single stock entry for simplicity or sum if needed
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'stock' => $stock ? $stock->quantity : 0,
+                'threshold' => $stock ? $stock->alert_quantity : 0,
+            ];
+        });
+
         return [
             'total_products' => Product::count(),
             'low_stock_count' => $lowStockQuery->count(),
+            'low_stock_items' => $lowStockItems,
         ];
     }
 
@@ -83,7 +96,7 @@ class DashboardService
         return DB::table('sale_lines')
             ->join('sales', 'sale_lines.sale_id', '=', 'sales.id')
             ->join('products', 'sale_lines.product_id', '=', 'products.id')
-            ->select('products.name', DB::raw('SUM(sale_lines.quantity) as total_qty'), DB::raw('SUM(sale_lines.total_amount) as total_revenue'))
+            ->select('products.name', DB::raw('SUM(sale_lines.quantity) as total_qty'), DB::raw('SUM(sale_lines.subtotal) as total_revenue'))
             ->when($branchId, fn($q) => $q->where('sales.branch_id', $branchId))
             ->whereBetween('sales.sold_at', $range)
             ->where('sales.status', 'completed')

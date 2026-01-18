@@ -44,7 +44,7 @@
           </p>
 
           <div class="mt-10 flex gap-4">
-            <Link href="/login">
+            <Link :href="route('dashboard')">
               <Button
                 size="large"
                 severity="primary"
@@ -57,6 +57,7 @@
               size="large"
               severity="secondary"
               outlined
+              @click="scrollToFeatures"
             >
               View Features
             </Button>
@@ -77,10 +78,44 @@
         </div>
       </div>
     </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-6 text-center">
+        <h2 class="text-3xl font-bold text-slate-900 mb-12">Powerful Features</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+          <div class="bg-white p-8 rounded-xl shadow-sm">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-6">
+              <i class="pi pi-shopping-cart text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Fast Checkout</h3>
+            <p class="text-slate-600">Complete sales in seconds with our optimized POS terminal.</p>
+          </div>
+          <div class="bg-white p-8 rounded-xl shadow-sm">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-6">
+              <i class="pi pi-box text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Inventory Tracking</h3>
+            <p class="text-slate-600">Monitor stock levels in real-time across multiple branches.</p>
+          </div>
+          <div class="bg-white p-8 rounded-xl shadow-sm">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-6">
+              <i class="pi pi-chart-bar text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Detailed Analytics</h3>
+            <p class="text-slate-600">Gain insights with comprehensive sales and stock reports.</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { Link } from "@inertiajs/vue3";
 import Button from "primevue/button";
+
+const scrollToFeatures = () => {
+  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+};
 </script>

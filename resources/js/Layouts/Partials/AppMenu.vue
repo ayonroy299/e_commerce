@@ -211,6 +211,64 @@ const model = ref([
             },
         ],
     },
+    {
+        label: "Reports & Analytics",
+        icon: "pi pi-chart-bar",
+        items: [
+            {
+                label: "Reports Central",
+                icon: "pi pi-th-large",
+                to: route("reports.index"),
+            },
+            {
+                label: "Sales Report",
+                icon: "pi pi-shopping-cart",
+                to: route("reports.sales"),
+            },
+            {
+                label: "Stock Report",
+                icon: "pi pi-box",
+                to: route("reports.stock"),
+            },
+        ],
+    },
+    {
+        label: "System Utilities",
+        icon: "pi pi-wrench",
+        items: [
+            {
+                label: "Data Imports",
+                icon: "pi pi-upload",
+                to: route("imports.index"),
+            },
+            {
+                label: "System Backups",
+                icon: "pi pi-database",
+                to: route("backups.index"),
+            },
+            {
+                label: "Audit Logs",
+                icon: "pi pi-history",
+                to: route("notification-jobs.index"), // Or a specific audit route
+            },
+            {
+                label: "Notifications",
+                icon: "pi pi-bell",
+                items: [
+                    {
+                        label: "Templates",
+                        icon: "pi pi-file-edit",
+                        to: route("notification-templates.index"),
+                    },
+                    {
+                        label: "History",
+                        icon: "pi pi-history",
+                        to: route("notification-jobs.index"),
+                    },
+                ],
+            },
+        ],
+    },
 ]);
 </script>
 

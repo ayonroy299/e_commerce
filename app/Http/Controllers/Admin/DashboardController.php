@@ -29,12 +29,17 @@ class DashboardController extends Controller
             ->value('value') ?? '$';
 
         return Inertia::render('Admin/Dashboard', [
-            'stats' => $stats,
+            'stats' => array_merge($stats['sales'], [
+                'total_products' => $stats['inventory']['total_products'] ?? 0,
+                'low_stock_count' => $stats['inventory']['low_stock_count'] ?? 0,
+                'currency' => $currencySymbol
+            ]),
+            'low_stock' => $stats['inventory']['low_stock_items'] ?? [],
+            'recent_activity' => $stats['recent_activity'] ?? [],
             'filters' => [
                 'branch_id' => $branchId,
                 'period' => $period,
             ],
-            'currency' => $currencySymbol,
         ]);
     }
 }

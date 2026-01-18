@@ -24,7 +24,7 @@
         </Column>
         <Column header="Actions">
            <template #body="{ data }">
-              <Button icon="pi pi-search-plus" text rounded @click="selectedJournal = data" />
+              <Button icon="pi pi-search-plus" text rounded @click="openDetails(data)" />
            </template>
         </Column>
       </DataTable>
@@ -32,7 +32,7 @@
     </div>
 
     <!-- Details Dialog -->
-    <Dialog v-model:visible="!!selectedJournal" header="Journal Entry Details" modal class="w-[700px]">
+    <Dialog v-model:visible="showDetails" header="Journal Entry Details" modal class="w-[700px]">
        <div v-if="selectedJournal" class="flex flex-col gap-4">
           <div class="grid grid-cols-2 text-sm text-gray-500 mb-4 p-3 bg-gray-50 rounded">
              <div>Journal #: <span class="font-bold text-black">{{ selectedJournal.journal_no }}</span></div>
@@ -67,6 +67,12 @@ import { router } from '@inertiajs/vue3';
 
 const props = defineProps(['journals']);
 const selectedJournal = ref(null);
+const showDetails = ref(false);
+
+const openDetails = (journal) => {
+    selectedJournal.value = journal;
+    showDetails.value = true;
+};
 
 const onPage = (event) => {
     router.get(route('journals.index'), { page: event.page + 1 }, { preserveState: true });

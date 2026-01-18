@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
 
 // PrimeVue related imports
 import Components from 'unplugin-vue-components/vite';
@@ -41,8 +42,8 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@': '/resources/js',
-            '@modules': '/Modules',
+            '@': path.resolve(__dirname, 'resources/js'),
+            '@modules': path.resolve(__dirname, 'Modules'),
         },
     },
 });
