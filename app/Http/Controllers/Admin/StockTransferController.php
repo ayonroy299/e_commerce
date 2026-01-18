@@ -23,30 +23,26 @@ class StockTransferController extends Controller
     public function __construct(StockTransferService $transferService)
     {
         $this->transferService = $transferService;
-    }
-
-    protected function getCrudConfig(): CrudConfig
-    {
-        return new CrudConfig(
-            model: StockTransfer::class,
-            storeRequest: StockTransferStoreRequest::class,
-            updateRequest: StockTransferUpdateRequest::class,
-            component: 'Admin/Inventory/Transfers/Index',
+        $this->init(new CrudConfig(
+            resource: 'stock-transfers',
+            modelClass: StockTransfer::class,
+            storeRequestClass: StockTransferStoreRequest::class,
+            updateRequestClass: StockTransferUpdateRequest::class,
+            componentPath: 'Admin/Inventory/Transfers/Index',
             searchColumns: ['transfer_no', 'notes'],
-            relations: ['fromBranch', 'toBranch', 'fromWarehouse', 'toWarehouse', 'creator'],
-        );
-    }
-
-    public function index()
-    {
-        return Inertia::render($this->getCrudConfig()->component, array_merge(
-            $this->getIndexData(),
-            [
-                'branches' => \App\Models\Branch::active()->get(['id', 'name']),
-                'warehouses' => \App\Models\Warehouse::where('status', true)->get(['id', 'name']),
-            ]
+            withRelations: ['fromBranch', 'toBranch', 'fromWarehouse', 'toWarehouse', 'creator'],
         ));
     }
+
+    protected function addProps(): array
+    {
+        return [
+            'branches' => \App\Models\Branch::active()->get(['id', 'name']),
+            'warehouses' => \App\Models\Warehouse::where('status', true)->get(['id', 'name']),
+        ];
+    }
+
+
 
     protected function beforeStore(array $data): array
     {

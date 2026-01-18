@@ -15,28 +15,26 @@ class ServiceTicketController extends Controller
 {
     use HasCrud;
 
-    public function index()
+    public function __construct()
     {
-        return Inertia::render($this->getCrudConfig()->component, array_merge(
-            $this->getIndexData(),
-            [
-                'customers' => \App\Models\Customer::all(['id', 'name']),
-                'products' => \App\Models\Product::all(['id', 'name']),
-                'users' => \App\Models\User::all(['id', 'name']),
-            ]
+        $this->init(new CrudConfig(
+            resource: 'service-tickets',
+            modelClass: ServiceTicket::class,
+            storeRequestClass: ServiceTicketStoreRequest::class,
+            updateRequestClass: ServiceTicketUpdateRequest::class,
+            componentPath: 'Admin/Service/Tickets/Index',
+            searchColumns: ['ticket_no', 'serial_no', 'issue'],
+            withRelations: ['customer', 'product', 'assignee', 'creator'],
         ));
     }
 
-    protected function getCrudConfig(): CrudConfig
+    protected function addProps(): array
     {
-        return new CrudConfig(
-            model: ServiceTicket::class,
-            storeRequest: ServiceTicketStoreRequest::class,
-            updateRequest: ServiceTicketUpdateRequest::class,
-            component: 'Admin/Service/Tickets/Index',
-            searchColumns: ['ticket_no', 'serial_no', 'issue'],
-            relations: ['customer', 'product', 'assignee', 'creator'],
-        );
+        return [
+            'customers' => \App\Models\Customer::all(['id', 'name']),
+            'products' => \App\Models\Product::all(['id', 'name']),
+            'users' => \App\Models\User::all(['id', 'name']),
+        ];
     }
 
     protected function beforeStore(array $data): array

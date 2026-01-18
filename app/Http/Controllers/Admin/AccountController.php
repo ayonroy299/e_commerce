@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AccountStoreRequest;
+use App\Http\Requests\Admin\AccountUpdateRequest;
 use App\Models\Account;
 use App\Traits\HasCrud;
 use App\Utils\CrudConfig;
@@ -12,24 +14,26 @@ class AccountController extends Controller
 {
     use HasCrud;
 
-    protected function getCrudConfig(): CrudConfig
+    public function __construct()
     {
-        return new CrudConfig(
-            model: Account::class,
-            component: 'Admin/Accounting/Accounts/Index',
+        $this->init(new CrudConfig(
+            resource: 'accounts',
+            modelClass: Account::class,
+            storeRequestClass: AccountStoreRequest::class,
+            updateRequestClass: AccountUpdateRequest::class,
+            componentPath: 'Admin/Accounting/Accounts/Index',
             searchColumns: ['name', 'code'],
-        );
-    }
-
-    public function index()
-    {
-        return Inertia::render($this->getCrudConfig()->component, array_merge(
-            $this->getIndexData(),
-            [
-                'types' => ['asset', 'liability', 'equity', 'revenue', 'expense'],
-            ]
         ));
     }
+
+    protected function addProps(): array
+    {
+        return [
+            'types' => ['asset', 'liability', 'equity', 'revenue', 'expense'],
+        ];
+    }
+
+
 
     protected function beforeStore(array $data): array
     {
