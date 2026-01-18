@@ -18,7 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\BranchContextMiddleware::class,
         ]);
 
-        //
+        $middleware->validateCsrfTokens(except: [
+            'admin/sslcommerz/*',
+        ]);
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('emi:process-auto-debits')->dailyAt('01:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

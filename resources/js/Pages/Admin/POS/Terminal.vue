@@ -101,6 +101,10 @@ const processPayment = async () => {
         });
 
         if (response.data.success) {
+            if (response.data.redirect_url) {
+                window.location.href = response.data.redirect_url;
+                return;
+            }
             toast.add({ severity: 'success', summary: 'Sale Completed', detail: `Invoice #${response.data.invoice_number}`, life: 3000 });
             cart.value = [];
             customer.value = null;
@@ -234,9 +238,10 @@ const openPayment = () => {
                     <span>{{ change.toFixed(2) }}</span>
                 </div>
                 
-                <div class="flex gap-2 justify-center">
+                <div class="flex gap-2 justify-center flex-wrap">
                     <Button label="Cash" :class="{'p-button-outlined': paymentMethod !== 'cash'}" @click="paymentMethod = 'cash'; paidAmount = total" />
                     <Button label="Card" :class="{'p-button-outlined': paymentMethod !== 'card'}" @click="paymentMethod = 'card'; paidAmount = total" />
+                    <Button label="Online" :class="{'p-button-outlined': paymentMethod !== 'online'}" @click="paymentMethod = 'online'; paidAmount = total" />
                     <Button label="EMI" :class="{'p-button-outlined': paymentMethod !== 'emi'}" @click="paymentMethod = 'emi'; paidAmount = 0" />
                 </div>
 

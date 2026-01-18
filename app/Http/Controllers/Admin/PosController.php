@@ -62,6 +62,7 @@ class PosController extends Controller
             }
             
             $isEmi = $validated['payment_method'] === 'emi';
+            $isOnline = $validated['payment_method'] === 'online';
             $paidAmount = $validated['paid_amount'];
             
             if ($isEmi) {
@@ -72,18 +73,18 @@ class PosController extends Controller
                 }
             }
 
-            $changeAmount = (!$isEmi && $paidAmount > $totalAmount) ? ($paidAmount - $totalAmount) : 0;
+            $changeAmount = (!$isEmi && !$isOnline && $paidAmount > $totalAmount) ? ($paidAmount - $totalAmount) : 0;
             
             // 2. Create Sale
             $sale = Sale::create([
                 'branch_id' => $user->branch_id,
                 'customer_id' => $validated['customer_id'],
                 'user_id' => $user->id,
-                'status' => 'completed',
-                'payment_status' => $isEmi ? 'partial' : ($paidAmount >= $totalAmount ? 'paid' : 'partial'),
+                'status' => $isOnline ? 'pending_payment' : 'completed',
+                'payment_status' => $isOnline ? 'pending' : ($isEmi ? 'partial' : ($paidAmount >= $totalAmount ? 'paid' : 'partial')),
                 'invoice_number' => 'INV-' . strtoupper(uniqid()),
                 'total_amount' => $totalAmount,
-                'paid_amount' => $paidAmount,
+                'paid_amount' => $isOnline ? 0 : $paidAmount,
                 'change_amount' => $changeAmount,
                 'sold_at' => now(),
             ]);
@@ -99,6 +100,7 @@ class PosController extends Controller
                     'subtotal' => $lineData['quantity'] * $lineData['unit_price'],
                 ]);
 
+                // We deduct stock even for pending online sales in POS to reserve items
                 $this->ledgerService->addEntry(
                     $user->branch_id,
                     $user->warehouse_id ?? 'default_warehouse_id_placeholder',
@@ -112,6 +114,7 @@ class PosController extends Controller
             }
             
             // 4. Record Payment / EMI Contract
+            $redirectUrl = null;
             if ($isEmi) {
                 $contract = \App\Models\EmiContract::create([
                     'branch_id' => $user->branch_id,
@@ -120,27 +123,46 @@ class PosController extends Controller
                     'principal_amount' => $totalAmount,
                     'down_payment' => $paidAmount,
                     'financed_amount' => $totalAmount - $paidAmount,
-                    'interest_amount' => 0, // Will be set by service
-                    'total_amount' => $totalAmount - $paidAmount, // Initial
+                    'interest_amount' => 0,
+                    'total_amount' => $totalAmount - $paidAmount,
                     'start_date' => now(),
-                    'status' => 'active',
+                    'status' => 'pending', // Pending until down payment confirmed
                     'created_by' => $user->id,
+                    'auto_debit' => $isOnline, // Set auto-debit if paid online
                 ]);
 
                 app(\App\Services\EmiService::class)->generateSchedule($contract);
 
-                $sale->payments()->create([
-                     'branch_id' => $user->branch_id,
-                     'amount' => $paidAmount,
-                     'payment_method' => 'cash',
-                     'note' => 'Down payment for EMI Contract',
-                ]);
-            } else {
+                if (!$isOnline) {
+                    $sale->payments()->create([
+                         'branch_id' => $user->branch_id,
+                         'amount' => $paidAmount,
+                         'payment_method' => 'cash',
+                         'note' => 'Down payment for EMI Contract',
+                    ]);
+                    $contract->update(['status' => 'active']);
+                }
+            } elseif (!$isOnline) {
                 $sale->payments()->create([
                     'branch_id' => $user->branch_id,
                     'amount' => min($totalAmount, $paidAmount),
                     'payment_method' => $validated['payment_method'],
                 ]);
+            }
+
+            if ($isOnline) {
+                $customer = Customer::find($validated['customer_id']);
+                $paymentResponse = app(\App\Services\SSLCommerzService::class)->initiatePayment($sale, [
+                    'name' => $customer ? $customer->name : 'Walk-in Customer',
+                    'phone' => $customer ? $customer->phone : '01700000000',
+                    'email' => $customer ? $customer->email : 'customer@example.com',
+                ]);
+
+                if ($paymentResponse['status'] === 'success') {
+                    $redirectUrl = $paymentResponse['gateway_url'];
+                } else {
+                    return response()->json(['success' => false, 'message' => $paymentResponse['message']], 422);
+                }
             }
             
             return response()->json([
@@ -148,6 +170,7 @@ class PosController extends Controller
                 'sale_id' => $sale->id,
                 'invoice_number' => $sale->invoice_number,
                 'contract_id' => $isEmi ? $contract->id : null,
+                'redirect_url' => $redirectUrl,
             ]);
         });
     }

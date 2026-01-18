@@ -22,6 +22,8 @@ class EmiContract extends BaseModel
         'total_amount',
         'start_date',
         'status',
+        'payment_token',
+        'auto_debit',
         'created_by',
     ];
 
@@ -32,6 +34,7 @@ class EmiContract extends BaseModel
         'interest_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'start_date' => 'date',
+        'auto_debit' => 'boolean',
     ];
 
     public function sale(): BelongsTo

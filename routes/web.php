@@ -215,4 +215,10 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\BranchContextMiddlew
     // Notifications
     Route::resource('notification-templates', App\Http\Controllers\Admin\NotificationTemplateController::class);
     Route::get('notification-jobs', [App\Http\Controllers\Admin\NotificationJobController::class, 'index'])->name('notification-jobs.index');
+
+    // SSLCommerz
+    Route::post('/sslcommerz/success', [App\Http\Controllers\Admin\SSLCommerzController::class, 'success'])->name('sslcommerz.success');
+    Route::post('/sslcommerz/fail', [App\Http\Controllers\Admin\SSLCommerzController::class, 'fail'])->name('sslcommerz.fail');
+    Route::post('/sslcommerz/cancel', [App\Http\Controllers\Admin\SSLCommerzController::class, 'cancel'])->name('sslcommerz.cancel');
+    Route::post('/sslcommerz/ipn', [App\Http\Controllers\Admin\SSLCommerzController::class, 'ipn'])->name('sslcommerz.ipn');
 });

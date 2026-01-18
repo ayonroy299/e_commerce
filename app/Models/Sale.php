@@ -26,6 +26,9 @@ class Sale extends BaseModel
         'discount_amount',
         'paid_amount',
         'change_amount',
+        'transaction_id',
+        'payment_gateway',
+        'gateway_response',
         'notes',
         'sold_at',
     ];
@@ -37,6 +40,7 @@ class Sale extends BaseModel
         'discount_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'change_amount' => 'decimal:2',
+        'gateway_response' => 'array',
     ];
 
     public function customer(): BelongsTo
