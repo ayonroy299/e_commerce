@@ -34,6 +34,21 @@ class PosController extends Controller
             'session' => $session,
             'emi_plans' => \App\Models\EmiPlan::where('is_active', true)->get(),
             'customers' => \App\Models\Customer::select('id', 'name', 'phone')->get(),
+            'categories' => \App\Models\Category::where('is_active', true)->get(),
+            'initial_products' => Product::active()
+                ->where('branch_id', auth()->user()->branch_id)
+                ->with(['media', 'variations'])
+                ->latest()
+                ->limit(24)
+                ->get()
+                ->map(fn($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'price' => $p->getCurrentPrice(),
+                    'image' => $p->getFirstMediaUrl('thumbnail'),
+                    'stock' => $p->stocks->sum('quantity'),
+                    'has_variations' => $p->hasVariations(),
+                ]),
         ]);
     }
 

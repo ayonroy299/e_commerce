@@ -27,8 +27,8 @@ class Sale extends BaseModel
         'paid_amount',
         'change_amount',
         'transaction_id',
-        'payment_gateway',
-        'gateway_response',
+        'country',
+        'traffic_source',
         'notes',
         'sold_at',
     ];

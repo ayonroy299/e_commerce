@@ -37,9 +37,44 @@ class JournalController extends Controller
 
     public function overview()
     {
-        // Simple P&L Snapshot
+        // Current P&L Totals
         $revenue = Account::where('type', 'revenue')->get()->sum('balance');
         $expenses = Account::where('type', 'expense')->get()->sum('balance');
+        
+        // Calculate Monthly Trends (Last 6 Months)
+        $trends = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $start = $date->copy()->startOfMonth();
+            $end = $date->copy()->endOfMonth();
+
+            $monthlyRev = JournalLine::whereHas('journal', fn($q) => $q->whereBetween('date', [$start, $end]))
+                ->whereHas('account', fn($q) => $q->where('type', 'revenue'))
+                ->get()
+                ->sum(fn($l) => $l->credit - $l->debit);
+
+            $monthlyExp = JournalLine::whereHas('journal', fn($q) => $q->whereBetween('date', [$start, $end]))
+                ->whereHas('account', fn($q) => $q->where('type', 'expense'))
+                ->get()
+                ->sum(fn($l) => $l->debit - $l->credit);
+
+            $trends[] = [
+                'month' => $date->format('M Y'),
+                'revenue' => (float) $monthlyRev,
+                'expenses' => (float) $monthlyExp,
+            ];
+        }
+
+        // Top Expense Categories
+        $topExpenses = Account::where('type', 'expense')
+            ->get()
+            ->map(fn($a) => [
+                'name' => $a->name,
+                'value' => (float) $a->balance
+            ])
+            ->sortByDesc('value')
+            ->take(5)
+            ->values();
         
         return Inertia::render('Admin/Accounting/Overview', [
             'overview' => [
@@ -47,6 +82,8 @@ class JournalController extends Controller
                 'total_expenses' => $expenses,
                 'net_profit' => $revenue - $expenses,
                 'cash_balance' => Account::where('name', 'Cash')->first()?->balance ?? 0,
+                'trends' => $trends,
+                'top_expenses' => $topExpenses
             ]
         ]);
     }

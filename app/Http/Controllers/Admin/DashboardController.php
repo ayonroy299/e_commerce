@@ -32,10 +32,17 @@ class DashboardController extends Controller
             'stats' => array_merge($stats['sales'], [
                 'total_products' => $stats['inventory']['total_products'] ?? 0,
                 'low_stock_count' => $stats['inventory']['low_stock_count'] ?? 0,
+                'lifetime_sales' => $stats['lifetime_sales'] ?? 0,
                 'currency' => $currencySymbol
             ]),
+            'income_stats' => $stats['income_stats'],
+            'traffic_stats' => $stats['traffic_stats'],
+            'recent_orders' => $stats['recent_orders'],
+            'recent_reviews' => $stats['recent_reviews'],
+            'active_users' => $stats['active_users'],
+            'sales_trend' => $stats['sales_trend'],
+            'top_products' => $stats['top_products'],
             'low_stock' => $stats['inventory']['low_stock_items'] ?? [],
-            'recent_activity' => $stats['recent_activity'] ?? [],
             'filters' => [
                 'branch_id' => $branchId,
                 'period' => $period,

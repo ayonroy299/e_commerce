@@ -4,10 +4,10 @@
   <div class="layout-footer">
     ECommerce by
     <a
-      href="#"
+      href="http://www.globalitsl.com"
       target="_blank"
       rel="noopener noreferrer"
       class="text-primary font-bold hover:underline"
-    >Sunwarul Islam</a>
+    >GITS</a>
   </div>
 </template>

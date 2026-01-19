@@ -540,13 +540,19 @@ class ProductController extends Controller
             });
         });
 
-        if ($request->has('trashed')) {
-            $query->when($request->trashed, fn($query) => $query->onlyTrashed());
-        }
-        
-        // JSON response for Autocomplete
-        if ($request->wantsJson()) {
-             return $query->limit(20)->get();
+        $query->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id));
+        $query->when($request->is_active, fn($q) => $q->where('is_active', $request->is_active));
+
+        // JSON response for POS / Autocomplete
+        if ($request->wantsJson() || $request->ajax()) {
+             return $query->with(['media', 'stocks'])->latest()->limit(24)->get()->map(fn($p) => [
+                 'id' => $p->id,
+                 'name' => $p->name,
+                 'price' => $p->getCurrentPrice(),
+                 'image' => $p->getFirstMediaUrl('thumbnail'),
+                 'stock' => $p->stocks->sum('quantity'),
+                 'has_variations' => $p->hasVariations(),
+             ]);
         }
 
         $query = $this->modifyQuery($query);

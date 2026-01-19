@@ -18,12 +18,12 @@ const isActive = (name) => current.value.startsWith(name);
 
 <template>
   <div
-    class="layout-topbar flex items-center justify-between px-4 bg-white border-b shadow-sm"
+    class="layout-topbar flex items-center justify-between px-4 bg-zinc-900 border-b border-zinc-800 shadow-md"
   >
     <!-- LEFT SIDE: Menu Toggle + Logo -->
     <div class="flex items-center gap-3">
       <button
-        class="layout-menu-button layout-topbar-action"
+        class="layout-menu-button layout-topbar-action text-zinc-400 hover:text-white transition-colors"
         @click="toggleMenu"
       >
         <i class="pi pi-bars text-xl" />
@@ -46,7 +46,7 @@ const isActive = (name) => current.value.startsWith(name);
         :class="
           isActive('pos.index')
             ? 'bg-indigo-600 text-white shadow-sm'
-            : 'hover:bg-indigo-50 text-slate-700'
+            : 'hover:bg-zinc-800 text-zinc-300'
         "
         @click="router.visit(route('pos.index'))"
       >
@@ -60,7 +60,7 @@ const isActive = (name) => current.value.startsWith(name);
         :class="
           isActive('pos.orders.index')
             ? 'bg-emerald-600 text-white shadow-sm'
-            : 'hover:bg-emerald-50 text-slate-700'
+            : 'hover:bg-zinc-800 text-zinc-300'
         "
         @click="router.visit(route('pos.orders.index'))"
       >

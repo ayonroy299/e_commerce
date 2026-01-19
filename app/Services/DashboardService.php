@@ -23,12 +23,49 @@ class DashboardService
 
             return [
                 'sales' => $this->getSalesStats($branchId, $dateRange),
+                'lifetime_sales' => $this->getLifetimeSales($branchId),
                 'inventory' => $this->getInventoryStats($branchId),
                 'purchases' => $this->getPurchaseStats($branchId, $dateRange),
                 'top_products' => $this->getTopProducts($branchId, $dateRange),
-                'recent_activity' => $this->getRecentActivity($branchId),
+                'income_stats' => $this->getIncomeStats($branchId),
+                'traffic_stats' => $this->getTrafficStats($branchId, $dateRange),
+                'recent_orders' => $this->getRecentOrders($branchId),
+                'recent_reviews' => $this->getRecentReviews($branchId),
+                'active_users' => $this->getActiveUsers($branchId),
+                'sales_trend' => $this->getSalesTrend($branchId),
             ];
         });
+    }
+
+    protected function getSalesTrend(?int $branchId)
+    {
+        $startDate = Carbon::today()->subDays(29)->startOfDay();
+        
+        $data = Sale::select(
+                DB::raw('DATE(sold_at) as date'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(total_amount) as amount')
+            )
+            ->where('sold_at', '>=', $startDate)
+            ->where('status', 'completed')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $trends = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $dateObj = Carbon::today()->subDays($i);
+            $dateStr = $dateObj->format('Y-m-d');
+            $row = $data->get($dateStr);
+            
+            $trends[] = [
+                'date' => $dateObj->format('d M'),
+                'count' => $row ? $row->count : 0,
+                'amount' => $row ? (float)$row->amount : 0,
+            ];
+        }
+        return $trends;
     }
 
     protected function getSalesStats(?int $branchId, array $range)
@@ -124,6 +161,104 @@ class DashboardService
         return $sales;
     }
 
+    protected function getLifetimeSales(?int $branchId)
+    {
+        return Sale::where('status', 'completed')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->sum('total_amount');
+    }
+
+    protected function getIncomeStats(?int $branchId)
+    {
+        $startDate = Carbon::now()->subMonths(11)->startOfMonth();
+        
+        $data = Sale::select(
+                DB::raw("DATE_FORMAT(sold_at, '%Y-%m') as month"),
+                DB::raw('SUM(total_amount) as amount')
+            )
+            ->where('sold_at', '>=', $startDate)
+            ->where('status', 'completed')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->keyBy('month');
+
+        $labels = [];
+        $amounts = [];
+
+        for ($i = 11; $i >= 0; $i--) {
+            $monthObj = Carbon::now()->subMonths($i);
+            $monthStr = $monthObj->format('Y-m');
+            $row = $data->get($monthStr);
+            
+            $labels[] = $monthObj->format('M Y');
+            $amounts[] = $row ? (float)$row->amount : 0;
+        }
+
+        return [
+            'labels' => $labels,
+            'amounts' => $amounts,
+        ];
+    }
+
+    protected function getTrafficStats(?int $branchId, array $range)
+    {
+        return Sale::select('traffic_source', DB::raw('COUNT(*) as count'), DB::raw('SUM(total_amount) as amount'))
+            ->whereBetween('sold_at', $range)
+            ->where('status', 'completed')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->whereNotNull('traffic_source')
+            ->groupBy('traffic_source')
+            ->get()
+            ->map(fn($s) => [
+                'source' => $s->traffic_source ?: 'Unknown',
+                'orders' => $s->count,
+                'amount' => (float)$s->amount,
+            ]);
+    }
+
+    protected function getRecentOrders(?int $branchId)
+    {
+        return Sale::with('customer')
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->latest('sold_at')
+            ->limit(10)
+            ->get()
+            ->map(fn($s) => [
+                'id' => $s->id,
+                'invoice_number' => $s->invoice_number,
+                'status' => $s->status,
+                'country' => $s->country ?? 'N/A',
+                'customer' => $s->customer->name ?? 'Walk-in',
+                'date' => $s->sold_at->format('Y-m-d H:i'),
+                'total_amount' => (float)$s->total_amount,
+            ]);
+    }
+
+    protected function getRecentReviews(?int $branchId)
+    {
+        return \App\Models\Review::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->latest()
+            ->limit(10)
+            ->get();
+    }
+
+    protected function getActiveUsers(?int $branchId)
+    {
+        $users = \App\Models\User::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->with('branch:id,name')
+            ->get();
+
+        return [
+            'count' => $users->count(),
+            'list' => $users->map(fn($u) => [
+                'name' => $u->name,
+                'branch' => $u->branch->name ?? 'Head Office',
+                'email' => $u->email,
+            ])
+        ];
+    }
     protected function getDateRange(string $period): array
     {
         return match ($period) {

@@ -1,5 +1,5 @@
 <template>
   <div>
-    <span>ECommerce</span>
+    <span class="text-white font-black text-xl tracking-tight">ECommerce</span>
   </div>
 </template>

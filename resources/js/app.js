@@ -70,8 +70,14 @@ createInertiaApp({
                 },
             });
 
-        // ✅ set global property before mounting
+        // ✅ set global properties before mounting
         app.config.globalProperties.$resolveImagePath = resolveImagePath;
+        app.config.globalProperties.$formatCurrency = (value) => {
+            if (typeof value !== "number") {
+                value = parseFloat(value) || 0;
+            }
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+        };
 
         // ✅ return the mounted app
         return app.mount(el);
